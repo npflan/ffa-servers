@@ -1,55 +1,68 @@
+apiVersion: apps/v1
 kind: Deployment
-apiVersion: extensions/v1beta1
 metadata:
-  name: armsrace-dust2-1
+  name: hl2dm-killbox-1
+  labels:
+    app: hl2dm-killbox-1
 spec:
   replicas: 1
+  selector:
+    matchLabels:
+      app: hl2dm-killbox-1
   template:
     metadata:
       labels:
-        app: armsrace-dust2-1
+        app: hl2dm-killbox-1
     spec:
       containers:
-      - name: armsrace-dust2-1
-        image: registry.npf.dk/npflan/csgo:201910101739
+      - name: tf2-prophunt-1-web
+        image: registry.npf.dk/ffa-servers/hl2dm-killbox-web:201910101919
+        ports:
+        - containerPort: 80
+
+      - name: hl2dm-killbox-1
+        tty: true
+        stdin: true         
+        image: registry.npf.dk/ffa-servers/hl2dm-killbox:test
         ports:
         - containerPort: 27015
         - containerPort: 27020
         env:
           - name: SERVER_HOSTNAME
-            value: "NPF FFA - CSGO Armsrace 1 - dust2"
-          - name: MAP
-            value: "de_dust2"
-          - name: MAX_PLAYERS
-            value: "12"
-          - name: TICKRATE
-            value: "60"
-          - name: GAME_TYPE
-            value: "1"
-          - name: GAME_MODE
-            value: "0"
+            value: "NPF FFA - HL2DM Killbox #1"
+          - name: MAXPLAYERS
+            value: "16"
+          - name: GRAVITY
+            value: "400"
           - name: TOKEN_API_URL
             valueFrom:
               configMapKeyRef:
                 key: url
                 name: steam-token-url
-        stdin: true
-        tty: true
+          - name: TICKRATE
+            value: "64"
+          - name: SV_DOWNLOADURL
+            value: "http://hl2dm-killbox-1.default.svc.npf.dk/"
         resources:
           requests:
             memory: "4000Mi"
             cpu: "2"
+
 ---
 kind: Service
 apiVersion: v1
 metadata:
-  name: armsrace-dust2-1
+  name: hl2dm-killbox-1
   labels:
-    app: armsrace-dust2-1
+    app: hl2dm-killbox-1
 spec:
   selector:
-    app: armsrace-dust2-1
+    app: hl2dm-killbox-1
   ports:
+    - name: web
+      protocol: TCP
+      port: 80
+      targetPort: 80
     - name: gametcp
       protocol: TCP
       port: 27015
