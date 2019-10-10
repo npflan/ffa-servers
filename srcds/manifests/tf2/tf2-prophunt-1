@@ -1,0 +1,80 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: tf2-prophunt-1
+  labels:
+    app: tf2-prophunt-1
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: tf2-prophunt-1
+  template:
+    metadata:
+      labels:
+        app: tf2-prophunt-1
+    spec:
+      containers:
+      - name: tf2-prophunt-1-web
+        image: registry.npf.dk/ffa-servers/tf2-prophunt-web:201910100057
+        ports:
+        - containerPort: 80
+
+      - name: tf2-prophunt-1
+        tty: true
+        stdin: true         
+        image: registry.npf.dk/ffa-servers/tf2-prophunt:201910101318
+        ports:
+        - containerPort: 27015
+        - containerPort: 27020
+        env:
+          - name: SERVER_HOSTNAME
+            value: "NPF FFA - TF2 Prophunt #1"
+          - name: MAX_PLAYERS
+            value: "24"
+          - name: TOKEN_API_URL
+            valueFrom:
+              configMapKeyRef:
+                key: url
+                name: steam-token-url
+          - name: TICKRATE
+            value: "64"
+          - name: SV_DOWNLOADURL
+            value: "http://tf2-prophunt-1.default.svc.npf.dk/"
+
+        resources:
+          requests:
+            memory: "4000Mi"
+            cpu: "2"
+
+---
+kind: Service
+apiVersion: v1
+metadata:
+  name: tf2-prophunt-1
+  labels:
+    app: tf2-prophunt-1
+spec:
+  selector:
+    app: tf2-prophunt-1
+  ports:
+    - name: web
+      protocol: TCP
+      port: 80
+      targetPort: 80
+    - name: gametcp
+      protocol: TCP
+      port: 27015
+      targetPort: 27015
+    - name: gameudp
+      protocol: UDP
+      port: 27015
+      targetPort: 27015
+    - name: matchandhltvtcp
+      protocol: TCP
+      port: 27020
+      targetPort: 27020
+    - name: matchandhltvudp
+      protocol: UDP
+      port: 27020
+      targetPort: 27020

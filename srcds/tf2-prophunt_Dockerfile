@@ -1,0 +1,56 @@
+FROM ubuntu:16.04
+
+ENV LAST_UPDATED_AT 2019-10-25
+
+RUN dpkg --add-architecture i386
+RUN apt-get update \
+    && apt-get install --no-install-recommends -y \
+	lib32gcc1 \
+	lib32stdc++6 \
+        libstdc++6:i386 libcurl4-gnutls-dev:i386 \
+	ca-certificates \
+	curl unzip p7zip-full curl wget bzip2 \
+    && rm -rf /var/lib/apt/lists/*
+
+RUN mkdir /steamcmd 
+WORKDIR /steamcmd
+ADD https://steamcdn-a.akamaihd.net/client/installer/steamcmd_linux.tar.gz steamcmd_linux.tar.gz
+RUN tar -zxvf steamcmd_linux.tar.gz
+
+## Placed in start script ##
+#RUN ./steamcmd.sh +login anonymous +force_install_dir /tf2 +app_update 232250 validate +quit
+
+RUN mkdir /tf2
+COPY containerfs/tf2 /tf2
+RUN mkdir /tf2/tf
+
+## Placed in Start Script##
+#RUN mkdir /root/.steam/sdk32
+#RUN ln -s /steamcmd/linux32/steamclient.so /root/.steam/sdk32/steamclient.so
+
+WORKDIR /tf2/build
+RUN chmod +x download.sh
+RUN ./download.sh
+RUN mkdir ./tf
+RUN tar xvzf dhooks-2.2.0-hg132-linux.tar.gz -C ../tf
+RUN tar xvzf sourcemod-*-linux.tar.gz -C ../tf
+RUN tar xvzf mmsource-*-linux.tar.gz -C ../tf
+RUN unzip -o prophunt-source.zip -d ../tf
+RUN unzip -o tf2items.zip -d ../tf
+RUN unzip -o PHDataPack-2015-09-10.zip -d ../tf
+RUN 7z x -o../tf/ PHMapEssentialsBZ2.7z
+RUN bash -c "cd ../tf/maps/ && bunzip2 *.bz2"
+ADD containerfs/tf2/build/ph-maplist.txt ../tf/cfg/mapcycle.txt
+
+RUN mv prophunt.smx ../tf/addons/sourcemod/plugins/
+RUN mv sm_observerpoint.smx ../tf/addons/sourcemod/plugins/
+RUN mv metamod.vdf ../tf/addons/
+
+
+WORKDIR /tf2
+RUN chmod +x start.sh
+EXPOSE 27015 80 
+
+CMD ["./start.sh"]
+
+
