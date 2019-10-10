@@ -21,7 +21,8 @@ RUN tar -zxvf steamcmd_linux.tar.gz
 RUN ./steamcmd.sh +login anonymous +force_install_dir /csgo +app_update 740 validate +quit
 
 # Contains wrapper scripts and .cfg files
-COPY containerfs/csgo /
+RUN mkdir /csgo
+COPY containerfs/csgo /csgo
 
 # Fix for missing library
 RUN mkdir /root/.steam/sdk32
