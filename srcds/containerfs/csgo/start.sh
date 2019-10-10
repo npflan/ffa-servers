@@ -3,7 +3,7 @@
 ## Update game before use
 /steamcmd/steamcmd.sh +login anonymous +force_install_dir /csgo +app_update 740 validate +quit
 
-export GAMESERVER_TOKEN=$(curl --silent "$TOKEN_API_URL/token/740/$HOSTNAME")
+export GAMESERVER_TOKEN=$(curl --silent "$TOKEN_API_URL/token/730/$HOSTNAME")
 export RCON_PASSWORD="$(< /dev/urandom tr -dc A-Za-z0-9 | head -c32; echo)"
 
 export SERVER_HOSTNAME="${SERVER_HOSTNAME:-}"
