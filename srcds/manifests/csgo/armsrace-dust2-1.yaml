@@ -37,7 +37,7 @@ spec:
         tty: true
         volumeMounts:
         - name: config-volume
-          mountPath: /etc/coredns
+          mountPath: /csgo/csgo/cfg
           readOnly: true
         resources:
           requests:
