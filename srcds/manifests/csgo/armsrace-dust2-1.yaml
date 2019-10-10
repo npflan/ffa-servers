@@ -11,11 +11,7 @@ spec:
     spec:
       containers:
       - name: armsrace-dust2-1
-<<<<<<< HEAD
-        image: registry.npf.dk/npflan/csgo:201910101739
-=======
         image: registry.npf.dk/npflan/csgo:201910102000
->>>>>>> a6b00e62d740dd81d91d597da0e9df854468528d
         ports:
         - containerPort: 27015
         - containerPort: 27020
