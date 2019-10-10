@@ -11,7 +11,7 @@ spec:
     spec:
       containers:
       - name: armsrace-dust2-1
-        image: registry.npf.dk/npflan/csgo:201910102155
+        image: registry.npf.dk/npflan/csgo:201910102253
         ports:
         - containerPort: 27015
         - containerPort: 27020
@@ -35,10 +35,21 @@ spec:
                 name: steam-token-url
         stdin: true
         tty: true
+        volumeMounts:
+        - name: config-volume
+          mountPath: /etc/coredns
+          readOnly: true
         resources:
           requests:
             memory: "4000Mi"
             cpu: "2"
+      volumes:
+        - name: config-volume
+          configMap:
+            name: armsrace-dust2
+            items:
+            - key: server.cfg
+              path: server.cfg
 ---
 kind: Service
 apiVersion: v1
@@ -66,3 +77,12 @@ spec:
       protocol: UDP
       port: 27020
       targetPort: 27020
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: armsrace-dust2
+data:
+  server.cfg: |
+    bot_chatter "off"
+    exec autoexec

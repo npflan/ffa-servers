@@ -24,12 +24,14 @@ export MAXPLAYERS="${MAXPLAYERS:-12}"
 cd $CSGO_DIR
 
 ### Create dynamic server config
-cat << SERVERCFG > $CSGO_DIR/csgo/cfg/server.cfg
+cat << AUTOEXEC > $CSGO_DIR/csgo/cfg/autoexec.cfg
 hostname "$SERVER_HOSTNAME"
 rcon_password "$RCON_PASSWORD"
 sv_lan 0
 sv_cheats 0
-SERVERCFG
+mp_match_end_restart 1
+mp_match_end_changelevel 1
+AUTOEXEC
 
 ./srcds_run \
     -console \
