@@ -1,0 +1,46 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: filebeat-ffa
+data:
+  filebeat.yml: |
+    filebeat.inputs:
+    - type: log
+      enabled: true
+      paths:
+        - /logs/*.log
+      include_lines: [' killed ', 'assisted killing', 'attacked', 'connected', 'entered the game', 'purchased', 'switched from team','Molotov','World triggered', 'Game Over','Team scored', 'Team triggered', 'disconnected', 'threw', 'suicide', ' say ', 'money change']
+      fields:
+        pipeline: csgo_gamelogs
+
+      exclude_lines: ['^DBG']
+
+      exclude_files: ['.gz$']
+
+
+    filebeat.config.modules:
+      path: ${path.config}/modules.d/*.yml
+
+      reload.enabled: false
+
+
+    setup.template.settings:
+      index.number_of_shards: 2
+
+    setup.kibana:
+
+      host: "http://kibana.default.svc.npf.dk:80"
+
+    output.elasticsearch:
+      hosts: ["10.100.101.7:9200","10.100.102.6:9200","10.100.102.7:9200","10.100.103.7:9200"]
+      pipeline: '%{[fields.pipeline]}'
+      index: "gamelogs-ffa-%{[beat.version]}-%{+yyyy.MM.dd}"
+
+      protocol: "http"
+      #username: "elastic"
+      #password: "changeme"
+
+    setup.template:
+      name: "gamelogs-ffa"
+      pattern: "gamelogs-ffa-*"
+      enabled: true

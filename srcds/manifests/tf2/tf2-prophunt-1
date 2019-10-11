@@ -17,13 +17,14 @@ spec:
       containers:
       - name: tf2-prophunt-1-web
         image: registry.npf.dk/ffa-servers/tf2-prophunt-web:201910100057
+        imagePullPolicy: Always
         ports:
         - containerPort: 80
 
       - name: tf2-prophunt-1
         tty: true
         stdin: true         
-        image: registry.npf.dk/ffa-servers/tf2-prophunt:201910101318
+        image: docker.emhost.dk/npflan/tf2-prophunt:1657
         ports:
         - containerPort: 27015
         - containerPort: 27020
@@ -31,7 +32,7 @@ spec:
           - name: SERVER_HOSTNAME
             value: "NPF FFA - TF2 Prophunt #1"
           - name: MAX_PLAYERS
-            value: "24"
+            value: "16"
           - name: TOKEN_API_URL
             valueFrom:
               configMapKeyRef:
