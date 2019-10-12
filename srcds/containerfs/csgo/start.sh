@@ -29,8 +29,6 @@ hostname "$SERVER_HOSTNAME"
 rcon_password "$RCON_PASSWORD"
 sv_lan 0
 sv_cheats 0
-mp_match_end_restart 1
-mp_match_end_changelevel 1
 AUTOEXEC
 
 ./srcds_run \

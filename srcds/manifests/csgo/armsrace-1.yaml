@@ -1,27 +1,29 @@
 kind: Deployment
 apiVersion: extensions/v1beta1
 metadata:
-  name: armsrace-cash-1
+  name: armsrace-1
 spec:
   replicas: 1
   template:
     metadata:
       labels:
-        app: armsrace-cash-1
+        app: armsrace-1
     spec:
       containers:
-      - name: armsrace-cash-1
+      - name: armsrace-1
         image: registry.npf.dk/npflan/csgo:201910102253
         ports:
         - containerPort: 27015
         - containerPort: 27020
         env:
           - name: SERVER_HOSTNAME
-            value: "NPF FFA - CSGO Armsrace 1 - cache"
+            value: "NPF FFA - CSGO Armsrace 1"
           - name: MAP
-            value: "de_cache"
+            value: "ar_baggage"
           - name: MAX_PLAYERS
             value: "12"
+          - name: MAPGROUP
+            value: "mg_armsrace"
           - name: TICKRATE
             value: "64"
           - name: GAME_TYPE
@@ -40,10 +42,13 @@ spec:
           mountPath: /csgo/csgo/cfg/server.cfg
           subPath: server.cfg
           readOnly: true
-        - name: config-gamemode-armsrace
+        - name: config-volume
           mountPath: /csgo/csgo/cfg/gamemode_armsrace.cfg
           subPath: gamemode_armsrace.cfg
           readOnly: true
+        - name: config-volume
+          mountPath: /csgo/start.sh
+          subPath: start.sh
         - name: logs
           mountPath: /logs
         resources:
@@ -71,16 +76,16 @@ spec:
       volumes:
         - name: config-volume
           configMap:
-            name: armsrace-cash-1
+            name: armsrace-1
+            defaultMode: 0777
             items:
             - key: server.cfg
               path: server.cfg
-        - name: config-gamemode-armsrace
-          configMap:
-            name: armsrace-cash-1
-            items:
             - key: gamemode_armsrace.cfg
               path: gamemode_armsrace.cfg
+            - key: start.sh
+              path: start.sh
+        
         - name: filebeat
           configMap:
             name: filebeat-ffa
@@ -95,12 +100,12 @@ spec:
 kind: Service
 apiVersion: v1
 metadata:
-  name: armsrace-cash-1
+  name: armsrace-1
   labels:
-    app: armsrace-cash-1
+    app: armsrace-1
 spec:
   selector:
-    app: armsrace-cash-1
+    app: armsrace-1
   ports:
     - name: gametcp
       protocol: TCP
@@ -122,12 +127,58 @@ spec:
 apiVersion: v1
 kind: ConfigMap
 metadata:
-  name: armsrace-cash-1
+  name: armsrace-1
 data:
   server.cfg: |
     sv_logsdir /logs
-    logs on
+    log on
     exec autoexec
+  start.sh: |
+    #!/bin/bash
+    ## Update game before use
+    /steamcmd/steamcmd.sh +login anonymous +force_install_dir /csgo +app_update 740 +quit
+
+    export GAMESERVER_TOKEN=$(curl --silent "$TOKEN_API_URL/token/730/$HOSTNAME")
+    export RCON_PASSWORD="$(< /dev/urandom tr -dc A-Za-z0-9 | head -c32; echo)"
+
+    export SERVER_HOSTNAME="${SERVER_HOSTNAME:-}"
+    export RCON_PASSWORD="${RCON_PASSWORD:-changeme}"
+    export STEAM_ACCOUNT="${GAMESERVER_TOKEN:-changeme}"
+    export CSGO_DIR="${CSGO_DIR:-/csgo}"
+    export IP="${IP:-0.0.0.0}"
+    export PORT="${PORT:-27015}"
+    export TICKRATE="${TICKRATE:-64}"
+    export GAME_TYPE="${GAME_TYPE:-0}"
+    export GAME_MODE="${GAME_MODE:-1}"
+    export MAP="${MAP:-de_dust2}"
+    export MAPGROUP="${MAPGROUP:-mg_active}"
+    export MAXPLAYERS="${MAXPLAYERS:-12}"
+
+    : ${CSGO_DIR:?"ERROR: CSGO_DIR IS NOT SET!"}
+
+    cd $CSGO_DIR
+
+    ### Create dynamic server config
+    cat << AUTOEXEC > $CSGO_DIR/csgo/cfg/autoexec.cfg
+    hostname "$SERVER_HOSTNAME"
+    rcon_password "$RCON_PASSWORD"
+    sv_lan 0
+    sv_cheats 0
+    AUTOEXEC
+
+    ./srcds_run \
+        -console \
+        -usercon \
+        -game csgo \
+        -tickrate $TICKRATE \
+        -port $PORT \
+        -maxplayers_override $MAXPLAYERS \
+        +game_type $GAME_TYPE \
+        +game_mode $GAME_MODE \
+        +mapgroup $MAPGROUP \
+        +map $MAP \
+        +ip $IP \
+        +sv_setsteamaccount $STEAM_ACCOUNT
   gamemode_armsrace.cfg: |
     bot_autodifficulty_threshold_high					0.0	// Value between -20.0 and 20.0 (Amount above avg human contribution score, above which a bot should lower its difficulty)
     bot_autodifficulty_threshold_low					-2.0	// Value between -20.0 and 20.0 (Amount below avg human contribution score, below which a bot should raise its difficulty)
@@ -189,7 +240,7 @@ data:
     mp_ggtr_end_round_kill_bonus						1
     mp_ggtr_halftime_delay								0.0
     mp_ggtr_last_weapon_kill_ends_half					0
-    mp_respawn_immunitytime								4
+    mp_respawn_immunitytime								2
     mp_halftime											0
     mp_match_can_clinch									0			// 0=No mercy rule, 1=team can clinch match win early if they win > 1/2 total rounds
     mp_maxmoney											0
@@ -238,4 +289,7 @@ data:
 
     sv_occlude_players								1
     occlusion_test_async								0
+
+    cl_disablefreezecam 1
+    mp_deathcam_skippable 1
 
